@@ -77,33 +77,6 @@ export const todoAPI = {
     }
   },
 
-  // Sincronizar todas las tareas (reemplaza todo en el servidor)
-  async syncTodos(todos) {
-    try {
-      console.log('🔄 Sincronizando', todos.length, 'tareas con el servidor...');
-      await simulateDelay(1000);
-      
-      // Primero obtenemos las tareas existentes
-      const existingTodos = await this.getTodos();
-      
-      // Eliminamos todas las tareas existentes
-      for (const todo of existingTodos) {
-        await this.deleteTodo(todo.id);
-      }
-      
-      // Creamos las nuevas tareas
-      for (const todo of todos) {
-        await this.createTodo(todo);
-      }
-      
-      console.log('✅ Sincronización completada');
-      return true;
-    } catch (error) {
-      console.error('❌ API Error - syncTodos:', error);
-      throw error;
-    }
-  },
-
   // Verificar conexión con el servidor
   async checkConnection() {
     try {

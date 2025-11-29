@@ -73,13 +73,6 @@ export default function TodoApp() {
     }
   };
 
-  // Sincronizar automáticamente cuando cambien los todos
-  useEffect(() => {
-    if (todos.length > 0 && !loading) {
-      syncWithBackend();
-    }
-  }, [todos, loading]);
-
   // Tema - sin localStorage
   useEffect(() => {
     const root = document.documentElement;
@@ -100,15 +93,6 @@ export default function TodoApp() {
       root.classList.add(`theme-${theme}`);
     }
   }, [dark, theme]);
-
-  const syncWithBackend = async () => {
-    try {
-      await todoAPI.syncTodos(todos);
-      setLastSync(new Date());
-    } catch (error) {
-      console.error('Error syncing with backend:', error);
-    }
-  };
 
   // FUNCIONES PRINCIPALES - siempre sincronizan con backend
   const addTodo = async (text, category = CATEGORIES.PERSONAL, priority = PRIORITIES.MEDIUM, dueDate = null) => {
