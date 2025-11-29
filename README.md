@@ -51,16 +51,30 @@ Una aplicación moderna y profesional de gestión de tareas construida con React
 - npm o yarn
 
 ### Instalación
-```bash
 # Clonar el repositorio
+```bash
 git clone https://github.com/tu-usuario/todo-app-pro.git
 cd todo-app-pro
+```
 
 # Instalar dependencias
+```bash
 npm install
+```
+
+# Crear archivo `db.json` en la raíz del proyecto con este contenido
+```bash
+{
+  "todos": []
+}
+```
 
 # Iniciar en modo desarrollo
+```bash
 npm start
+```
 
 # Iniciar con servidor JSON (opcional)
+```bash
 npm run dev
+```
