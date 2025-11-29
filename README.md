@@ -1,70 +1,66 @@
-# Getting Started with Create React App
+# 🚀 TodoApp Pro - Gestión Profesional de Tareas
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Una aplicación moderna y profesional de gestión de tareas construida con React, featuring análisis avanzados, sincronización en tiempo real y PWA.
 
-## Available Scripts
+## ✨ Características Principales
 
-In the project directory, you can run:
+### 📊 Dashboard de Productividad
+- **Métricas avanzadas**: Tasa de completación, rachas, tendencias
+- **Análisis por categorías y prioridades** 
+- **Alertas inteligentes**: Tareas vencidas y próximas
+- **Estadísticas en tiempo real**
 
-### `npm start`
+### 🎯 Sistema de Logros
+- **Logros desbloqueables**: Por productividad y consistencia
+- **Sistema de rachas**: Días consecutivos completando tareas
+- **Metas personalizadas**: Seguimiento de objetivos
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 🔄 Sincronización Multi-Dispositivo
+- **API REST**: Sincronización con backend
+- **Local Storage**: Funcionamiento offline
+- **WebSockets**: Actualizaciones en tiempo real (próximamente)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 📱 Experiencia PWA
+- **Instalable**: Funciona como aplicación nativa
+- **Offline**: Funciona sin conexión a internet
+- **Responsive**: Adaptable a todos los dispositivos
 
-### `npm test`
+### 🎨 Personalización
+- **Múltiples temas**: Azul, verde, morado, naturaleza
+- **Modo oscuro/claro**: Adaptable a preferencias
+- **Interfaz intuitiva**: Diseño moderno y accesible
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### ⌨️ Productividad
+- **Atajos de teclado**: Navegación rápida
+- **Drag & Drop**: Reordenamiento intuitivo
+- **Búsqueda en tiempo real**: Filtrado instantáneo
 
-### `npm run build`
+## 🛠 Tecnologías Utilizadas
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Frontend**: React 18 + Hooks
+- **Estilos**: Sass/SCSS + CSS Variables
+- **Drag & Drop**: @hello-pangea/dnd
+- **PWA**: Service Workers + Web App Manifest
+- **Persistencia**: LocalStorage + API REST
+- **Iconos**: Emojis nativos (sin dependencias)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🚀 Instalación y Uso
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Prerrequisitos
+- Node.js 16+ 
+- npm o yarn
 
-### `npm run eject`
+### Instalación
+```bash
+# Clonar el repositorio
+git clone https://github.com/tu-usuario/todo-app-pro.git
+cd todo-app-pro
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Instalar dependencias
+npm install
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Iniciar en modo desarrollo
+npm start
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# Iniciar con servidor JSON (opcional)
+npm run dev
