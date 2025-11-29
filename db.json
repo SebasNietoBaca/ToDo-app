@@ -1,34 +1,14 @@
 {
   "todos": [
     {
-      "id": "1",
-      "text": "Aprender React avanzado",
+      "id": "1764445053286-mvejm7h",
+      "text": "lavar",
       "completed": false,
-      "createdAt": 1700000000000,
+      "createdAt": 1764445053286,
       "completedAt": null,
-      "category": "study",
-      "priority": "high",
-      "dueDate": null
-    },
-    {
-      "id": "2", 
-      "text": "Reunión con el equipo",
-      "completed": true,
-      "createdAt": 1699000000000,
-      "completedAt": 1699086400000,
-      "category": "work",
-      "priority": "urgent",
-      "dueDate": 1699086400000
-    },
-    {
-      "id": "3",
-      "text": "Comprar víveres",
-      "completed": false,
-      "createdAt": 1699500000000,
-      "completedAt": null,
-      "category": "shopping",
+      "category": "personal",
       "priority": "medium",
-      "dueDate": 1700000000000
+      "dueDate": "2025-12-18T20:40:00.000Z"
     }
   ]
 }

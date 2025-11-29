@@ -77,7 +77,7 @@ export const todoAPI = {
     }
   },
 
-  // Sincronizar todas las tareas
+  // Sincronizar todas las tareas (reemplaza todo en el servidor)
   async syncTodos(todos) {
     try {
       console.log('🔄 Sincronizando', todos.length, 'tareas con el servidor...');
@@ -111,6 +111,56 @@ export const todoAPI = {
       return response.ok;
     } catch (error) {
       return false;
+    }
+  },
+
+  // Obtener estadísticas del servidor
+  async getStats() {
+    try {
+      const todos = await this.getTodos();
+      
+      const total = todos.length;
+      const completed = todos.filter(t => t.completed).length;
+      const pending = total - completed;
+      const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+      
+      // Tareas vencidas
+      const today = new Date();
+      const overdue = todos.filter(todo => {
+        if (!todo.dueDate || todo.completed) return false;
+        try {
+          const dueDate = new Date(todo.dueDate);
+          return dueDate < today;
+        } catch (error) {
+          return false;
+        }
+      }).length;
+
+      // Tareas próximas (próximos 7 días)
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 7);
+      
+      const upcoming = todos.filter(todo => {
+        if (!todo.dueDate || todo.completed) return false;
+        try {
+          const dueDate = new Date(todo.dueDate);
+          return dueDate >= today && dueDate <= nextWeek;
+        } catch (error) {
+          return false;
+        }
+      }).length;
+
+      return {
+        total,
+        completed,
+        pending,
+        completionRate,
+        overdue,
+        upcoming
+      };
+    } catch (error) {
+      console.error('Error getting stats:', error);
+      throw error;
     }
   }
 };

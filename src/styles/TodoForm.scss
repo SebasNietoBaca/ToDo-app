@@ -1,9 +1,10 @@
+// ===== TODO FORM =====
 .todo-form {
   background: var(--card);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--shadow);
   border: 1px solid rgba(0, 0, 0, 0.08);
 
   .form-main-row {
@@ -48,13 +49,19 @@
       transition: all 0.2s ease;
       white-space: nowrap;
 
-      &:hover {
+      &:hover:not(:disabled) {
         background: #1d4ed8;
         transform: translateY(-1px);
       }
 
       &:active {
         transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
       }
     }
   }
@@ -94,11 +101,72 @@
           box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
         }
       }
+
+      // ESTILOS PARA SELECTORES DE TIEMPO (NUEVOS)
+      .time-selectors {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        
+        .form-time-select {
+          padding: 8px 6px;
+          border-radius: 6px;
+          border: 1px solid rgba(0, 0, 0, 0.12);
+          background: var(--bg);
+          color: var(--text);
+          font-size: 14px;
+          min-width: 60px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+          }
+        }
+        
+        .form-period-select {
+          padding: 8px 6px;
+          border-radius: 6px;
+          border: 1px solid rgba(0, 0, 0, 0.12);
+          background: var(--bg);
+          color: var(--text);
+          font-size: 14px;
+          min-width: 70px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+          }
+        }
+
+        span {
+          color: var(--muted);
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  .datetime-preview {
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+
+    small {
+      color: var(--accent);
+      font-weight: 600;
     }
   }
 }
 
-// Responsive
+// Responsive para TodoForm
 @media (max-width: 768px) {
   .todo-form {
     padding: 12px;
@@ -118,6 +186,10 @@
 
       .form-group {
         min-width: 100%;
+
+        .time-selectors {
+          justify-content: flex-start;
+        }
       }
     }
   }
@@ -127,9 +199,13 @@
   .todo-form {
     .form-options-row {
       .form-group {
-        .form-select,
-        .form-date {
-          font-size: 16px; // Prevent zoom on iOS
+        .time-selectors {
+          .form-time-select,
+          .form-period-select {
+            min-width: 50px;
+            font-size: 12px;
+            padding: 6px 4px;
+          }
         }
       }
     }

@@ -4,7 +4,7 @@ const THEMES = [
   { id: 'blue', name: 'Azul', color: '#3b82f6' },
   { id: 'green', name: 'Verde', color: '#10b981' },
   { id: 'purple', name: 'Morado', color: '#8b5cf6' },
-  { id: 'nature', name: 'Naturaleza', color: '#059669' }
+  { id: 'red', name: 'Rojo', color: '#ef4444' }
 ];
 
 export default function ThemeSelector({ theme, setTheme }) {

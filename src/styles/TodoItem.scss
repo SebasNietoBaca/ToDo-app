@@ -1,3 +1,4 @@
+// ===== TODO ITEM =====
 .todo-item {
   display: flex;
   align-items: center;
@@ -8,7 +9,7 @@
   border: 1px solid rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   cursor: grab;
-  position: relative;
+  margin-bottom: 8px;
 
   &:active {
     cursor: grabbing;
@@ -136,9 +137,14 @@
       color: #dc2626;
       font-weight: 700;
     }
+    
+    &.due-soon {
+      background: #fef3c7;
+      color: #92400e;
+    }
   }
 
-  // Estilos de edición
+  // ESTILOS DE EDICIÓN (COMPLETOS CON NUEVOS SELECTORES DE TIEMPO)
   .edit-form {
     flex: 1;
     display: flex;
@@ -165,8 +171,7 @@
       gap: 8px;
       flex-wrap: wrap;
 
-      .edit-select,
-      .edit-date {
+      .edit-select {
         flex: 1;
         min-width: 120px;
         padding: 6px 8px;
@@ -175,6 +180,70 @@
         background: var(--bg);
         color: var(--text);
         font-size: 14px;
+      }
+
+      .datetime-edit {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        
+        .edit-date {
+          width: 100%;
+          padding: 6px 8px;
+          border-radius: 4px;
+          border: 1px solid rgba(0, 0, 0, 0.12);
+          background: var(--bg);
+          color: var(--text);
+          font-size: 14px;
+        }
+        
+        .time-selectors {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          
+          .edit-time-select {
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            min-width: 60px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:focus {
+              outline: none;
+              border-color: var(--accent);
+              box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+            }
+          }
+          
+          .edit-period-select {
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            min-width: 70px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:focus {
+              outline: none;
+              border-color: var(--accent);
+              box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+            }
+          }
+
+          span {
+            color: var(--muted);
+            font-weight: 600;
+          }
+        }
       }
     }
   }
@@ -209,7 +278,7 @@
   // Efectos hover
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px var(--shadow);
   }
 }
 
@@ -220,11 +289,11 @@
   &.dragging {
     opacity: 0.8;
     transform: rotate(3deg);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 25px var(--shadow);
   }
 }
 
-// Responsive
+// Responsive para TodoItem
 @media (max-width: 768px) {
   .todo-item {
     padding: 12px;
@@ -249,9 +318,14 @@
       .edit-options {
         flex-direction: column;
         
-        .edit-select,
-        .edit-date {
+        .edit-select {
           min-width: 100%;
+        }
+        
+        .datetime-edit {
+          .time-selectors {
+            justify-content: flex-start;
+          }
         }
       }
     }
@@ -270,6 +344,21 @@
 
     .actions {
       align-self: flex-end;
+    }
+
+    .edit-form {
+      .edit-options {
+        .datetime-edit {
+          .time-selectors {
+            .edit-time-select,
+            .edit-period-select {
+              min-width: 50px;
+              font-size: 12px;
+              padding: 4px 6px;
+            }
+          }
+        }
+      }
     }
   }
 }

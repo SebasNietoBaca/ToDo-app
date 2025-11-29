@@ -1,0 +1,56 @@
+// Variables CSS para temas
+:root {
+  // Colores base
+  --bg-light: #f8fafc;
+  --bg-dark: #0f172a;
+  --card-light: #ffffff;
+  --card-dark: #1e293b;
+  --text-light: #1e293b;
+  --text-dark: #f1f5f9;
+  --muted-light: #64748b;
+  --muted-dark: #94a3b8;
+  --border-light: #e2e8f0;
+  --border-dark: #334155;
+  
+  // Colores de acento por tema
+  --accent-blue: #3b82f6;
+  --accent-green: #10b981;
+  --accent-purple: #8b5cf6;
+  --accent-red: #ef4444;
+  
+  // Estados
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --error: #dc2626;
+  
+  // Sombras
+  --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-dark: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+// Tema claro por defecto
+:root {
+  --bg: var(--bg-light);
+  --card: var(--card-light);
+  --text: var(--text-light);
+  --muted: var(--muted-light);
+  --border: var(--border-light);
+  --shadow: var(--shadow-light);
+  --accent: var(--accent-blue);
+}
+
+// Tema oscuro
+html.theme-dark {
+  --bg: var(--bg-dark);
+  --card: var(--card-dark);
+  --text: var(--text-dark);
+  --muted: var(--muted-dark);
+  --border: var(--border-dark);
+  --shadow: var(--shadow-dark);
+}
+
+// Aplicar temas de color
+html.theme-blue { --accent: var(--accent-blue); }
+html.theme-green { --accent: var(--accent-green); }
+html.theme-purple { --accent: var(--accent-purple); }
+html.theme-red { --accent: var(--accent-red); }

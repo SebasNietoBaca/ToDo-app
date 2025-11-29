@@ -1,32 +1,31 @@
 {
-  "name": "todo-app-profesional",
+  "name": "todoapp-pro",
   "version": "1.0.0",
-  "description": "Una aplicación profesional de gestión de tareas con análisis avanzados y PWA",
-  "keywords": ["react", "todo", "productivity", "pwa", "analytics"],
-  "homepage": "https://tu-usuario.github.io/todo-app",
-  "main": "src/index.js",
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "server": "json-server --watch db.json --port 3001 --delay 500",
-    "dev": "concurrently \"npm run server\" \"npm start\"",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
-  },
+  "private": true,
   "dependencies": {
     "@hello-pangea/dnd": "^16.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "sass": "^1.66.1"
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "server": "json-server --watch db.json --port 3001 --host 0.0.0.0",
+    "dev": "concurrently \"npm run server\" \"npm start\""
   },
   "devDependencies": {
     "concurrently": "^7.6.0",
-    "gh-pages": "^5.0.0",
-    "json-server": "^0.17.4"
+    "json-server": "^0.17.3"
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
     "development": [
       "last 1 chrome version",
       "last 1 firefox version",

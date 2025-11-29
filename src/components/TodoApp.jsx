@@ -3,12 +3,10 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import TodoForm from "./TodoForm";
 import TodoItem from "./TodoItem";
 import StatsPanel from "./StatsPanel";
-import AchievementsPanel from "./AchievementsPanel";
 import ThemeSelector from "./ThemeSelector";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { todoAPI } from "../services/api";
 import { exportToJSON, importFromJSON } from "../utils/exportUtils";
-import { calculateStreak, getProductivityTrends } from "../utils/analytics";
 
 const SORT = {
   NEWEST: "newest",
@@ -45,14 +43,12 @@ export default function TodoApp() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [showStats, setShowStats] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [syncEnabled, setSyncEnabled] = useState(false);
   const [lastSync, setLastSync] = useState(null);
   const [theme, setTheme] = useState("blue");
-  const [achievements, setAchievements] = useState([]);
 
   const searchInputRef = useRef(null);
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales SOLO desde el backend
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -61,80 +57,49 @@ export default function TodoApp() {
     try {
       setLoading(true);
       
-      // Cargar desde localStorage primero
-      const raw = localStorage.getItem("todo_data_v3");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setTodos(parsed);
-        setManualOrder(parsed.map(todo => todo.id));
-      }
-
-      // Intentar sincronizar con backend si está habilitado
-      if (syncEnabled) {
-        try {
-          const serverTodos = await todoAPI.getTodos();
-          if (serverTodos.length > 0) {
-            setTodos(serverTodos);
-            setManualOrder(serverTodos.map(todo => todo.id));
-            setLastSync(new Date());
-          }
-        } catch (error) {
-          console.warn('No se pudo conectar al servidor, usando localStorage');
-        }
-      }
+      // Cargar desde el backend
+      const serverTodos = await todoAPI.getTodos();
+      setTodos(serverTodos);
+      setManualOrder(serverTodos.map(todo => todo.id));
+      setLastSync(new Date());
+      
     } catch (err) {
-      console.error("Error loading data:", err);
+      console.error("Error loading data from server:", err);
+      // Si falla el backend, empezamos con array vacío
+      setTodos([]);
+      setManualOrder([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Sincronizar con backend cuando cambien los todos
+  // Sincronizar automáticamente cuando cambien los todos
   useEffect(() => {
-    if (syncEnabled && todos.length > 0) {
+    if (todos.length > 0 && !loading) {
       syncWithBackend();
     }
-  }, [todos, syncEnabled]);
+  }, [todos, loading]);
 
-  // Guardar en localStorage
+  // Tema - sin localStorage
   useEffect(() => {
-    if (!loading) {
-      localStorage.setItem("todo_data_v3", JSON.stringify(todos));
-      if (manualOrder.length > 0) {
-        localStorage.setItem("todo_manual_order", JSON.stringify(manualOrder));
-      }
-    }
-  }, [todos, manualOrder, loading]);
-
-  // Cargar orden manual
-  useEffect(() => {
-    try {
-      const savedOrder = localStorage.getItem("todo_manual_order");
-      if (savedOrder) {
-        setManualOrder(JSON.parse(savedOrder));
-      }
-    } catch (err) {
-      console.error("Failed to load manual order", err);
-    }
-  }, []);
-
-  // Tema
-  useEffect(() => {
-    localStorage.setItem("todo_theme_v2", dark ? "dark" : "light");
+    const root = document.documentElement;
+    
+    // Remover todas las clases de tema anteriores
+    root.classList.remove(
+      "theme-dark", 
+      "theme-blue", 
+      "theme-green", 
+      "theme-purple", 
+      "theme-red"
+    );
+    
     if (dark) {
-      document.documentElement.classList.add("theme-dark");
-      document.documentElement.classList.remove("theme-blue", "theme-nature");
+      root.classList.add("theme-dark");
+      root.classList.add(`theme-${theme}`);
     } else {
-      document.documentElement.classList.remove("theme-dark");
-      document.documentElement.classList.add(`theme-${theme}`);
+      root.classList.add(`theme-${theme}`);
     }
   }, [dark, theme]);
-
-  // Calcular logros
-  useEffect(() => {
-    const newAchievements = calculateAchievements(todos);
-    setAchievements(newAchievements);
-  }, [todos]);
 
   const syncWithBackend = async () => {
     try {
@@ -145,7 +110,7 @@ export default function TodoApp() {
     }
   };
 
-  // FUNCIONES PRINCIPALES
+  // FUNCIONES PRINCIPALES - siempre sincronizan con backend
   const addTodo = async (text, category = CATEGORIES.PERSONAL, priority = PRIORITIES.MEDIUM, dueDate = null) => {
     const now = Date.now();
     
@@ -164,13 +129,12 @@ export default function TodoApp() {
     setManualOrder((prev) => [newTodo.id, ...prev]);
     setSort(SORT.MANUAL);
 
-    if (syncEnabled) {
-      try {
-        await todoAPI.createTodo(newTodo);
-        setLastSync(new Date());
-      } catch (error) {
-        console.error('Error creating todo on server:', error);
-      }
+    // Sincronizar con backend
+    try {
+      await todoAPI.createTodo(newTodo);
+      setLastSync(new Date());
+    } catch (error) {
+      console.error('Error creating todo on server:', error);
     }
   };
 
@@ -185,11 +149,10 @@ export default function TodoApp() {
           completedAt: !t.completed ? now : null,
         };
 
-        if (syncEnabled) {
-          todoAPI.updateTodo(id, updatedTodo).catch(error => {
-            console.error('Error updating todo on server:', error);
-          });
-        }
+        // Sincronizar inmediatamente
+        todoAPI.updateTodo(id, updatedTodo).catch(error => {
+          console.error('Error updating todo on server:', error);
+        });
 
         return updatedTodo;
       })
@@ -200,13 +163,11 @@ export default function TodoApp() {
     setTodos((prev) => prev.filter((t) => t.id !== id));
     setManualOrder((prev) => prev.filter(todoId => todoId !== id));
 
-    if (syncEnabled) {
-      try {
-        await todoAPI.deleteTodo(id);
-        setLastSync(new Date());
-      } catch (error) {
-        console.error('Error deleting todo on server:', error);
-      }
+    try {
+      await todoAPI.deleteTodo(id);
+      setLastSync(new Date());
+    } catch (error) {
+      console.error('Error deleting todo on server:', error);
     }
   };
 
@@ -222,13 +183,11 @@ export default function TodoApp() {
       t.id === id ? { ...t, ...updatedTodo } : t
     ));
 
-    if (syncEnabled) {
-      try {
-        await todoAPI.updateTodo(id, updatedTodo);
-        setLastSync(new Date());
-      } catch (error) {
-        console.error('Error updating todo on server:', error);
-      }
+    try {
+      await todoAPI.updateTodo(id, updatedTodo);
+      setLastSync(new Date());
+    } catch (error) {
+      console.error('Error updating todo on server:', error);
     }
   };
 
@@ -237,17 +196,15 @@ export default function TodoApp() {
     setTodos((prev) => prev.filter((t) => !t.completed));
     setManualOrder((prev) => prev.filter(id => !completedIds.includes(id)));
 
-    if (syncEnabled) {
-      try {
-        for (const id of completedIds) {
-          await todoAPI.deleteTodo(id);
-        }
-        setLastSync(new Date());
-      } catch (error) {
-        console.error('Error clearing completed on server:', error);
+    try {
+      for (const id of completedIds) {
+        await todoAPI.deleteTodo(id);
       }
+      setLastSync(new Date());
+    } catch (error) {
+      console.error('Error clearing completed on server:', error);
     }
-  }, [todos, syncEnabled]);
+  }, [todos]);
 
   // Funciones de exportación/importación
   const handleExport = () => {
@@ -262,7 +219,12 @@ export default function TodoApp() {
       const importedTodos = await importFromJSON(file);
       setTodos(importedTodos);
       setManualOrder(importedTodos.map(todo => todo.id));
-      alert('Tareas importadas correctamente!');
+      
+      // Sincronizar los importados con el backend
+      await todoAPI.syncTodos(importedTodos);
+      setLastSync(new Date());
+      
+      alert('Tareas importadas y sincronizadas correctamente!');
     } catch (error) {
       alert('Error importando archivo: ' + error.message);
     }
@@ -353,7 +315,7 @@ export default function TodoApp() {
       <div className="container">
         <div className="loading-screen">
           <div className="loading-spinner"></div>
-          <p>Cargando tus tareas...</p>
+          <p>Cargando tus tareas desde el servidor...</p>
         </div>
       </div>
     );
@@ -367,7 +329,7 @@ export default function TodoApp() {
             <h1 id="app-title">🚀 TodoApp Pro</h1>
             <div className="muted" aria-live="polite">
               {pendingCount} pendiente{pendingCount !== 1 ? "s" : ""}
-              {lastSync && syncEnabled && (
+              {lastSync && (
                 <span className="sync-status">
                   • Última sincronización: {lastSync.toLocaleTimeString()}
                 </span>
@@ -401,23 +363,14 @@ export default function TodoApp() {
                 📤 Exportar
               </button>
 
-              <label className="sync-toggle">
-                <input
-                  type="checkbox"
-                  checked={syncEnabled}
-                  onChange={(e) => setSyncEnabled(e.target.checked)}
-                />
-                <span className="muted">{syncEnabled ? "🔄 Sync" : "📴 Local"}</span>
-              </label>
-
               <label className="theme-toggle" aria-label="Alternar tema">
                 <input
                   type="checkbox"
                   checked={dark}
-                  onChange={() => setDark((v) => !v)}
+                  onChange={(e) => setDark(e.target.checked)}
                   aria-checked={dark}
                 />
-                <span className="muted">{dark ? "🌙 Dark" : "☀️ Light"}</span>
+                <span className="muted">{dark ? "🌙 Oscuro" : "☀️ Claro"}</span>
               </label>
             </div>
           </div>
@@ -536,7 +489,7 @@ export default function TodoApp() {
               <div className="count-item">✅ Completadas: <strong>{completedCount}</strong></div>
               <div className="count-item">⏳ Pendientes: <strong>{pendingCount}</strong></div>
               <div className="count-item">
-                {syncEnabled ? "🔄 Sincronizado" : "📴 Solo local"}
+                🔄 Sincronizado con servidor
               </div>
             </div>
 
@@ -594,64 +547,6 @@ export default function TodoApp() {
         isVisible={showStats} 
         onClose={() => setShowStats(false)} 
       />
-
-      {/* Panel de Logros */}
-      <AchievementsPanel achievements={achievements} />
     </div>
   );
-}
-
-// Función para calcular logros
-function calculateAchievements(todos) {
-  const achievements = [];
-  const completedCount = todos.filter(t => t.completed).length;
-  const streak = calculateStreak(todos);
-  const trends = getProductivityTrends(todos);
-
-  // Logro: Primera tarea
-  if (todos.length > 0) {
-    achievements.push({
-      id: 'first_task',
-      name: '¡Primeros pasos!',
-      description: 'Creaste tu primera tarea',
-      icon: '🎯',
-      unlocked: true
-    });
-  }
-
-  // Logro: Completar 10 tareas
-  if (completedCount >= 10) {
-    achievements.push({
-      id: 'task_master',
-      name: 'Maestro de tareas',
-      description: 'Completaste 10 tareas',
-      icon: '🏆',
-      unlocked: true
-    });
-  }
-
-  // Logro: Racha de 3 días
-  if (streak >= 3) {
-    achievements.push({
-      id: 'productive_streak',
-      name: 'Racha productiva',
-      description: `${streak} días consecutivos completando tareas`,
-      icon: '🔥',
-      unlocked: true
-    });
-  }
-
-  // Logro: Todas las categorías
-  const usedCategories = [...new Set(todos.map(t => t.category))];
-  if (usedCategories.length >= 4) {
-    achievements.push({
-      id: 'category_explorer',
-      name: 'Explorador de categorías',
-      description: 'Usaste 4 categorías diferentes',
-      icon: '🌍',
-      unlocked: true
-    });
-  }
-
-  return achievements;
 }
