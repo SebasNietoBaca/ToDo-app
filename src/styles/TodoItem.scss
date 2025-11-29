@@ -1,0 +1,275 @@
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: grab;
+  position: relative;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.completed {
+    opacity: 0.7;
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+    
+    .text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+  }
+
+  &.overdue {
+    border-left: 4px solid #ef4444;
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.02));
+  }
+
+  // Estilos de prioridad
+  &.priority-urgent {
+    border-left: 4px solid #dc2626;
+    background: linear-gradient(180deg, rgba(220, 38, 38, 0.05), rgba(220, 38, 38, 0.02));
+  }
+
+  &.priority-high {
+    border-left: 4px solid #ea580c;
+  }
+
+  &.priority-medium {
+    border-left: 4px solid #d97706;
+  }
+
+  &.priority-low {
+    border-left: 4px solid #16a34a;
+  }
+
+  .left {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-top: 2px;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .completed-check,
+    .incomplete-circle {
+      font-size: 18px;
+      transition: all 0.2s ease;
+    }
+  }
+
+  .content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .text {
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 8px;
+    cursor: pointer;
+    word-wrap: break-word;
+    
+    &:hover {
+      color: var(--accent);
+    }
+  }
+
+  .todo-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .category-badge,
+  .priority-badge,
+  .due-date-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .category-badge {
+    &.personal { background: #dbeafe; color: #1e40af; }
+    &.work { background: #f3e8ff; color: #7e22ce; }
+    &.study { background: #dcfce7; color: #166534; }
+    &.health { background: #fef3c7; color: #92400e; }
+    &.shopping { background: #fce7f3; color: #be185d; }
+    &.other { background: #e5e7eb; color: #374151; }
+  }
+
+  .priority-badge {
+    &.urgent { background: #fecaca; color: #dc2626; }
+    &.high { background: #fed7aa; color: #ea580c; }
+    &.medium { background: #fef3c7; color: #d97706; }
+    &.low { background: #dcfce7; color: #16a34a; }
+  }
+
+  .due-date-badge {
+    background: #e0e7ff;
+    color: #3730a3;
+    
+    &.overdue {
+      background: #fecaca;
+      color: #dc2626;
+      font-weight: 700;
+    }
+  }
+
+  // Estilos de edición
+  .edit-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .edit-input {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      
+      &:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+    }
+
+    .edit-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      .edit-select,
+      .edit-date {
+        flex: 1;
+        min-width: 120px;
+        padding: 6px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+      }
+    }
+  }
+
+  .actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+
+    button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      font-size: 16px;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.05);
+        transform: scale(1.1);
+      }
+
+      &.save:hover { background: rgba(16, 185, 129, 0.1); }
+      &.cancel:hover { background: rgba(107, 114, 128, 0.1); }
+      &.edit:hover { background: rgba(37, 99, 235, 0.1); }
+      &.delete:hover { background: rgba(239, 68, 68, 0.1); }
+    }
+  }
+
+  // Efectos hover
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Estados de drag and drop
+.draggable-todo {
+  margin-bottom: 8px;
+  
+  &.dragging {
+    opacity: 0.8;
+    transform: rotate(3deg);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .todo-item {
+    padding: 12px;
+    gap: 8px;
+
+    .left {
+      gap: 8px;
+    }
+
+    .todo-meta {
+      gap: 6px;
+    }
+
+    .category-badge,
+    .priority-badge,
+    .due-date-badge {
+      font-size: 0.7rem;
+      padding: 3px 6px;
+    }
+
+    .edit-form {
+      .edit-options {
+        flex-direction: column;
+        
+        .edit-select,
+        .edit-date {
+          min-width: 100%;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .todo-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+
+    .left {
+      gap: 12px;
+    }
+
+    .actions {
+      align-self: flex-end;
+    }
+  }
+}
