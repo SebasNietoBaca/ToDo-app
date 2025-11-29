@@ -1,41 +1,37 @@
-# 🚀 TodoApp Pro - Gestión Profesional de Tareas
+#  TodoApp Pro - Gestión Profesional de Tareas
 
 Una aplicación moderna y profesional de gestión de tareas construida con React, featuring análisis avanzados, sincronización en tiempo real y PWA.
 
-## ✨ Características Principales
+##  Características Principales
 
-### 📊 Dashboard de Productividad
+###  Dashboard de Productividad
 - **Métricas avanzadas**: Tasa de completación, rachas, tendencias
 - **Análisis por categorías y prioridades** 
 - **Alertas inteligentes**: Tareas vencidas y próximas
 - **Estadísticas en tiempo real**
 
-### 🎯 Sistema de Logros
-- **Logros desbloqueables**: Por productividad y consistencia
-- **Sistema de rachas**: Días consecutivos completando tareas
-- **Metas personalizadas**: Seguimiento de objetivos
 
-### 🔄 Sincronización Multi-Dispositivo
+###  Sincronización Multi-Dispositivo
 - **API REST**: Sincronización con backend
 - **Local Storage**: Funcionamiento offline
 - **WebSockets**: Actualizaciones en tiempo real (próximamente)
 
-### 📱 Experiencia PWA
+###  Experiencia PWA
 - **Instalable**: Funciona como aplicación nativa
 - **Offline**: Funciona sin conexión a internet
 - **Responsive**: Adaptable a todos los dispositivos
 
-### 🎨 Personalización
+###  Personalización
 - **Múltiples temas**: Azul, verde, morado, naturaleza
 - **Modo oscuro/claro**: Adaptable a preferencias
 - **Interfaz intuitiva**: Diseño moderno y accesible
 
-### ⌨️ Productividad
+###  Productividad
 - **Atajos de teclado**: Navegación rápida
 - **Drag & Drop**: Reordenamiento intuitivo
 - **Búsqueda en tiempo real**: Filtrado instantáneo
 
-## 🛠 Tecnologías Utilizadas
+##  Tecnologías Utilizadas
 
 - **Frontend**: React 18 + Hooks
 - **Estilos**: Sass/SCSS + CSS Variables
@@ -44,7 +40,7 @@ Una aplicación moderna y profesional de gestión de tareas construida con React
 - **Persistencia**: LocalStorage + API REST
 - **Iconos**: Emojis nativos (sin dependencias)
 
-## 🚀 Instalación y Uso
+##  Instalación y Uso
 
 ### Prerrequisitos
 - Node.js 16+ 
