@@ -49,7 +49,6 @@ export default function TodoItem({ todo, toggleTodo, deleteTodo, editTodo }) {
       return;
     }
     
-    // SOLUCIÓN DEFINITIVA: Guardar la fecha EXACTAMENTE como viene del input
     editTodo(todo.id, trimmed, category, priority, dueDate || null);
     setEditing(false);
   };
@@ -63,63 +62,53 @@ export default function TodoItem({ todo, toggleTodo, deleteTodo, editTodo }) {
   };
 
   const getCategoryIcon = (category) => {
-    switch (category) {
-      case CATEGORIES.PERSONAL: return "👤";
-      case CATEGORIES.WORK: return "💼";
-      case CATEGORIES.STUDY: return "📚";
-      case CATEGORIES.HEALTH: return "🏥";
-      case CATEGORIES.SHOPPING: return "🛒";
-      case CATEGORIES.OTHER: return "📌";
-      default: return "📌";
-    }
+    const icons = {
+      [CATEGORIES.PERSONAL]: "👤",
+      [CATEGORIES.WORK]: "💼",
+      [CATEGORIES.STUDY]: "📚",
+      [CATEGORIES.HEALTH]: "🏥", 
+      [CATEGORIES.SHOPPING]: "🛒",
+      [CATEGORIES.OTHER]: "📌"
+    };
+    return icons[category] || "📌";
   };
 
   const getPriorityIcon = (priority) => {
-    switch (priority) {
-      case PRIORITIES.URGENT: return "🚀";
-      case PRIORITIES.HIGH: return "🔥";
-      case PRIORITIES.MEDIUM: return "⚡";
-      case PRIORITIES.LOW: return "📋";
-      default: return "📋";
-    }
+    const icons = {
+      [PRIORITIES.URGENT]: "🚀",
+      [PRIORITIES.HIGH]: "🔥",
+      [PRIORITIES.MEDIUM]: "⚡",
+      [PRIORITIES.LOW]: "📋"
+    };
+    return icons[priority] || "📋";
   };
 
-  // SOLUCIÓN DEFINITIVA: Función que NO usa Date() para evitar problemas de zona horaria
   const formatDueDate = (dueDateString) => {
     if (!dueDateString) return null;
     
     try {
-      // Parsear manualmente YYYY-MM-DD
       const [year, month, day] = dueDateString.split('-').map(Number);
-      
-      // Crear fecha local sin problemas de zona horaria
       const dueDate = new Date(year, month - 1, day);
       
-      // Hoy en fecha local
       const today = new Date();
       const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       
-      // Mañana en fecha local
       const tomorrow = new Date(todayLocal);
       tomorrow.setDate(tomorrow.getDate() + 1);
       
-      // Comparar timestamps de fechas locales (sin horas)
       if (dueDate.getTime() === todayLocal.getTime()) {
         return "Hoy";
       } else if (dueDate.getTime() === tomorrow.getTime()) {
         return "Mañana";
       } else {
-        // Formatear manualmente para evitar problemas de zona horaria
         const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
         return `${day} ${monthNames[month - 1]}`;
       }
     } catch (error) {
-      console.error('Error formateando fecha:', error);
       return dueDateString;
     }
   };
 
-  // SOLUCIÓN DEFINITIVA: Detección que NO usa Date() para comparaciones
   const isOverdue = todo.dueDate && !todo.completed && (() => {
     try {
       const [year, month, day] = todo.dueDate.split('-').map(Number);
@@ -130,10 +119,30 @@ export default function TodoItem({ todo, toggleTodo, deleteTodo, editTodo }) {
       
       return dueDate < todayLocal;
     } catch (error) {
-      console.error('Error verificando fecha vencida:', error);
       return false;
     }
   })();
+
+  const getDaysUntilDue = () => {
+    if (!todo.dueDate) return null;
+    
+    try {
+      const [year, month, day] = todo.dueDate.split('-').map(Number);
+      const dueDate = new Date(year, month - 1, day);
+      
+      const today = new Date();
+      const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      const diffTime = dueDate.getTime() - todayLocal.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      return diffDays;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const daysUntilDue = getDaysUntilDue();
 
   return (
     <div
@@ -213,11 +222,15 @@ export default function TodoItem({ todo, toggleTodo, deleteTodo, editTodo }) {
                 {getPriorityIcon(todo.priority)} {todo.priority}
               </span>
               {todo.dueDate && (
-                <span className={`due-date-badge ${isOverdue ? "overdue" : ""}`}>
+                <span className={`due-date-badge ${isOverdue ? "overdue" : ""} ${daysUntilDue !== null && daysUntilDue <= 3 ? "soon" : ""}`}>
                   📅 {formatDueDate(todo.dueDate)}
                   {isOverdue && " ⚠️"}
+                  {daysUntilDue !== null && daysUntilDue <= 3 && daysUntilDue > 0 && ` (${daysUntilDue}d)`}
                 </span>
               )}
+              <span className="created-date">
+                📅 {new Date(todo.createdAt).toLocaleDateString()}
+              </span>
             </div>
           </div>
         )}
