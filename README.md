@@ -22,7 +22,7 @@ Una aplicación moderna y profesional de gestión de tareas construida con React
 - **Responsive**: Adaptable a todos los dispositivos
 
 ###  Personalización
-- **Múltiples temas**: Azul, verde, morado, naturaleza
+- **Múltiples temas**: Azul, verde, morado, rojo
 - **Modo oscuro/claro**: Adaptable a preferencias
 - **Interfaz intuitiva**: Diseño moderno y accesible
 
