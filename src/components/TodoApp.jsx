@@ -1,14 +1,18 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import TodoForm from "./TodoForm.jsx";
-import TodoItem from "./TodoItem.jsx";
-import StatsPanel from "./StatsPanel.jsx";
-import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts.js";
-import { todoAPI } from "../services/api.js";
+import TodoForm from "./TodoForm";
+import TodoItem from "./TodoItem";
+import StatsPanel from "./StatsPanel";
+import AchievementsPanel from "./AchievementsPanel";
+import ThemeSelector from "./ThemeSelector";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { todoAPI } from "../services/api";
+import { exportToJSON, importFromJSON } from "../utils/exportUtils";
+import { calculateStreak, getProductivityTrends } from "../utils/analytics";
 
 const SORT = {
   NEWEST: "newest",
-  OLDEST: "oldest",
+  OLDEST: "oldest", 
   ALPHA: "alpha",
   COMPLETED_AT: "completedAt",
   MANUAL: "manual"
@@ -17,8 +21,8 @@ const SORT = {
 const CATEGORIES = {
   PERSONAL: "personal",
   WORK: "work",
-  STUDY: "study", 
-  HEALTH: "health",
+  STUDY: "study",
+  HEALTH: "health", 
   SHOPPING: "shopping",
   OTHER: "other"
 };
@@ -43,6 +47,8 @@ export default function TodoApp() {
   const [loading, setLoading] = useState(true);
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [lastSync, setLastSync] = useState(null);
+  const [theme, setTheme] = useState("blue");
+  const [achievements, setAchievements] = useState([]);
 
   const searchInputRef = useRef(null);
 
@@ -55,7 +61,15 @@ export default function TodoApp() {
     try {
       setLoading(true);
       
-      // Intentar cargar desde el backend primero
+      // Cargar desde localStorage primero
+      const raw = localStorage.getItem("todo_data_v3");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setTodos(parsed);
+        setManualOrder(parsed.map(todo => todo.id));
+      }
+
+      // Intentar sincronizar con backend si está habilitado
       if (syncEnabled) {
         try {
           const serverTodos = await todoAPI.getTodos();
@@ -63,19 +77,10 @@ export default function TodoApp() {
             setTodos(serverTodos);
             setManualOrder(serverTodos.map(todo => todo.id));
             setLastSync(new Date());
-            return;
           }
         } catch (error) {
           console.warn('No se pudo conectar al servidor, usando localStorage');
         }
-      }
-      
-      // Fallback a localStorage
-      const raw = localStorage.getItem("todo_data_v3");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setTodos(parsed);
-        setManualOrder(parsed.map(todo => todo.id));
       }
     } catch (err) {
       console.error("Error loading data:", err);
@@ -91,7 +96,7 @@ export default function TodoApp() {
     }
   }, [todos, syncEnabled]);
 
-  // Guardar en localStorage como backup
+  // Guardar en localStorage
   useEffect(() => {
     if (!loading) {
       localStorage.setItem("todo_data_v3", JSON.stringify(todos));
@@ -100,15 +105,6 @@ export default function TodoApp() {
       }
     }
   }, [todos, manualOrder, loading]);
-
-  const syncWithBackend = async () => {
-    try {
-      await todoAPI.syncTodos(todos);
-      setLastSync(new Date());
-    } catch (error) {
-      console.error('Error syncing with backend:', error);
-    }
-  };
 
   // Cargar orden manual
   useEffect(() => {
@@ -125,15 +121,34 @@ export default function TodoApp() {
   // Tema
   useEffect(() => {
     localStorage.setItem("todo_theme_v2", dark ? "dark" : "light");
-    if (dark) document.documentElement.classList.add("theme-dark");
-    else document.documentElement.classList.remove("theme-dark");
-  }, [dark]);
+    if (dark) {
+      document.documentElement.classList.add("theme-dark");
+      document.documentElement.classList.remove("theme-blue", "theme-nature");
+    } else {
+      document.documentElement.classList.remove("theme-dark");
+      document.documentElement.classList.add(`theme-${theme}`);
+    }
+  }, [dark, theme]);
+
+  // Calcular logros
+  useEffect(() => {
+    const newAchievements = calculateAchievements(todos);
+    setAchievements(newAchievements);
+  }, [todos]);
+
+  const syncWithBackend = async () => {
+    try {
+      await todoAPI.syncTodos(todos);
+      setLastSync(new Date());
+    } catch (error) {
+      console.error('Error syncing with backend:', error);
+    }
+  };
 
   // FUNCIONES PRINCIPALES
   const addTodo = async (text, category = CATEGORIES.PERSONAL, priority = PRIORITIES.MEDIUM, dueDate = null) => {
     const now = Date.now();
     
-    // SOLUCIÓN DEFINITIVA: Guardar la fecha como string YYYY-MM-DD directamente
     const newTodo = {
       id: `${now}-${Math.random().toString(36).slice(2, 9)}`,
       text,
@@ -142,14 +157,13 @@ export default function TodoApp() {
       completedAt: null,
       category,
       priority,
-      dueDate: dueDate // Guardamos el string YYYY-MM-DD directamente
+      dueDate: dueDate
     };
 
     setTodos((prev) => [newTodo, ...prev]);
     setManualOrder((prev) => [newTodo.id, ...prev]);
     setSort(SORT.MANUAL);
 
-    // Sincronizar con backend si está habilitado
     if (syncEnabled) {
       try {
         await todoAPI.createTodo(newTodo);
@@ -171,7 +185,6 @@ export default function TodoApp() {
           completedAt: !t.completed ? now : null,
         };
 
-        // Sincronizar con backend si está habilitado
         if (syncEnabled) {
           todoAPI.updateTodo(id, updatedTodo).catch(error => {
             console.error('Error updating todo on server:', error);
@@ -187,7 +200,6 @@ export default function TodoApp() {
     setTodos((prev) => prev.filter((t) => t.id !== id));
     setManualOrder((prev) => prev.filter(todoId => todoId !== id));
 
-    // Sincronizar con backend si está habilitado
     if (syncEnabled) {
       try {
         await todoAPI.deleteTodo(id);
@@ -199,19 +211,17 @@ export default function TodoApp() {
   };
 
   const editTodo = async (id, newText, newCategory, newPriority, newDueDate) => {
-    // SOLUCIÓN DEFINITIVA: Guardar la fecha como string YYYY-MM-DD directamente
     const updatedTodo = {
       text: newText,
       category: newCategory,
       priority: newPriority,
-      dueDate: newDueDate // Guardamos el string YYYY-MM-DD directamente
+      dueDate: newDueDate
     };
 
     setTodos((prev) => prev.map((t) => 
       t.id === id ? { ...t, ...updatedTodo } : t
     ));
 
-    // Sincronizar con backend si está habilitado
     if (syncEnabled) {
       try {
         await todoAPI.updateTodo(id, updatedTodo);
@@ -222,16 +232,13 @@ export default function TodoApp() {
     }
   };
 
-  // CLEAR COMPLETED
   const clearCompleted = useCallback(async () => {
     const completedIds = todos.filter(t => t.completed).map(t => t.id);
     setTodos((prev) => prev.filter((t) => !t.completed));
     setManualOrder((prev) => prev.filter(id => !completedIds.includes(id)));
 
-    // Sincronizar con backend si está habilitado
     if (syncEnabled) {
       try {
-        // Eliminar tareas completadas del servidor
         for (const id of completedIds) {
           await todoAPI.deleteTodo(id);
         }
@@ -241,6 +248,26 @@ export default function TodoApp() {
       }
     }
   }, [todos, syncEnabled]);
+
+  // Funciones de exportación/importación
+  const handleExport = () => {
+    exportToJSON(todos);
+  };
+
+  const handleImport = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const importedTodos = await importFromJSON(file);
+      setTodos(importedTodos);
+      setManualOrder(importedTodos.map(todo => todo.id));
+      alert('Tareas importadas correctamente!');
+    } catch (error) {
+      alert('Error importando archivo: ' + error.message);
+    }
+    event.target.value = '';
+  };
 
   // HOOK DE TECLADO
   useKeyboardShortcuts({
@@ -269,7 +296,7 @@ export default function TodoApp() {
     setSort(SORT.MANUAL);
   };
 
-  // Contadores
+  // Contadores y estadísticas
   const totalCount = todos.length;
   const completedCount = useMemo(() => todos.filter((t) => t.completed).length, [todos]);
   const pendingCount = totalCount - completedCount;
@@ -288,27 +315,22 @@ export default function TodoApp() {
   const visibleTodos = useMemo(() => {
     let list = sort === SORT.MANUAL ? getTodosInManualOrder : todos.slice();
 
-    // Búsqueda
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter((t) => t.text.toLowerCase().includes(q));
     }
 
-    // Filtro de estado
     if (filter === "active") list = list.filter((t) => !t.completed);
     else if (filter === "completed") list = list.filter((t) => t.completed);
 
-    // Filtro de categoría
     if (categoryFilter !== "all") {
       list = list.filter((t) => t.category === categoryFilter);
     }
 
-    // Filtro de prioridad
     if (priorityFilter !== "all") {
       list = list.filter((t) => t.priority === priorityFilter);
     }
 
-    // Ordenamiento
     if (sort === SORT.NEWEST) {
       list.sort((a, b) => b.createdAt - a.createdAt);
     } else if (sort === SORT.OLDEST) {
@@ -342,7 +364,7 @@ export default function TodoApp() {
       <div className="todo-app" role="application" aria-labelledby="app-title">
         <header className="todo-header">
           <div className="header-left">
-            <h1 id="app-title">Mis Tareas</h1>
+            <h1 id="app-title">🚀 TodoApp Pro</h1>
             <div className="muted" aria-live="polite">
               {pendingCount} pendiente{pendingCount !== 1 ? "s" : ""}
               {lastSync && syncEnabled && (
@@ -360,16 +382,32 @@ export default function TodoApp() {
                 onClick={() => setShowStats(true)}
                 title="Ver estadísticas (Ctrl+S)"
               >
-                📊 Estadísticas
+                📊 Dashboard
               </button>
               
+              <ThemeSelector theme={theme} setTheme={setTheme} />
+              
+              <label className="import-btn">
+                📥 Importar
+                <input 
+                  type="file" 
+                  accept=".json" 
+                  onChange={handleImport} 
+                  style={{ display: 'none' }} 
+                />
+              </label>
+
+              <button onClick={handleExport} className="export-btn">
+                📤 Exportar
+              </button>
+
               <label className="sync-toggle">
                 <input
                   type="checkbox"
                   checked={syncEnabled}
                   onChange={(e) => setSyncEnabled(e.target.checked)}
                 />
-                <span className="muted">{syncEnabled ? "🔄 Sincronizado" : "📴 Local"}</span>
+                <span className="muted">{syncEnabled ? "🔄 Sync" : "📴 Local"}</span>
               </label>
 
               <label className="theme-toggle" aria-label="Alternar tema">
@@ -486,7 +524,7 @@ export default function TodoApp() {
                   aria-label="Borrar completadas"
                   title="Borrar completadas (Ctrl+Shift+C)"
                 >
-                  🗑️ Borrar completadas
+                  🗑️ Limpiar
                 </button>
               </div>
             </div>
@@ -506,7 +544,7 @@ export default function TodoApp() {
               <div className="empty">
                 {search || categoryFilter !== "all" || priorityFilter !== "all" || filter !== "all" 
                   ? "No hay tareas que coincidan con los filtros" 
-                  : "No hay tareas — agrega una arriba 📝"}
+                  : "¡Comienza agregando tu primera tarea! 🚀"}
               </div>
             ) : (
               <DragDropContext onDragEnd={onDragEnd}>
@@ -556,6 +594,64 @@ export default function TodoApp() {
         isVisible={showStats} 
         onClose={() => setShowStats(false)} 
       />
+
+      {/* Panel de Logros */}
+      <AchievementsPanel achievements={achievements} />
     </div>
   );
+}
+
+// Función para calcular logros
+function calculateAchievements(todos) {
+  const achievements = [];
+  const completedCount = todos.filter(t => t.completed).length;
+  const streak = calculateStreak(todos);
+  const trends = getProductivityTrends(todos);
+
+  // Logro: Primera tarea
+  if (todos.length > 0) {
+    achievements.push({
+      id: 'first_task',
+      name: '¡Primeros pasos!',
+      description: 'Creaste tu primera tarea',
+      icon: '🎯',
+      unlocked: true
+    });
+  }
+
+  // Logro: Completar 10 tareas
+  if (completedCount >= 10) {
+    achievements.push({
+      id: 'task_master',
+      name: 'Maestro de tareas',
+      description: 'Completaste 10 tareas',
+      icon: '🏆',
+      unlocked: true
+    });
+  }
+
+  // Logro: Racha de 3 días
+  if (streak >= 3) {
+    achievements.push({
+      id: 'productive_streak',
+      name: 'Racha productiva',
+      description: `${streak} días consecutivos completando tareas`,
+      icon: '🔥',
+      unlocked: true
+    });
+  }
+
+  // Logro: Todas las categorías
+  const usedCategories = [...new Set(todos.map(t => t.category))];
+  if (usedCategories.length >= 4) {
+    achievements.push({
+      id: 'category_explorer',
+      name: 'Explorador de categorías',
+      description: 'Usaste 4 categorías diferentes',
+      icon: '🌍',
+      unlocked: true
+    });
+  }
+
+  return achievements;
 }

@@ -16,7 +16,6 @@ const PRIORITIES = {
   URGENT: "urgent"
 };
 
-// MOVER FUNCIONES AUXILIARES AL PRINCIPIO
 const getCategoryColor = (category) => {
   const colors = {
     [CATEGORIES.PERSONAL]: '#3b82f6',
@@ -61,39 +60,77 @@ const getPriorityIcon = (priority) => {
   }
 };
 
-// SOLUCIÓN DEFINITIVA: Función que NO usa Date() para evitar problemas de zona horaria
 const formatDueDate = (dueDateString) => {
   if (!dueDateString) return null;
   
   try {
-    // Parsear manualmente YYYY-MM-DD
     const [year, month, day] = dueDateString.split('-').map(Number);
-    
-    // Crear fecha local sin problemas de zona horaria
     const dueDate = new Date(year, month - 1, day);
     
-    // Hoy en fecha local
     const today = new Date();
     const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     
-    // Mañana en fecha local
     const tomorrow = new Date(todayLocal);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    // Comparar timestamps de fechas locales (sin horas)
     if (dueDate.getTime() === todayLocal.getTime()) {
       return "Hoy";
     } else if (dueDate.getTime() === tomorrow.getTime()) {
       return "Mañana";
     } else {
-      // Formatear manualmente para evitar problemas de zona horaria
       const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
       return `${day} ${monthNames[month - 1]}`;
     }
   } catch (error) {
-    console.error('Error formateando fecha:', error);
     return dueDateString;
   }
+};
+
+const calculateStreak = (todos) => {
+  const completedDates = todos
+    .filter(t => t.completedAt)
+    .map(t => new Date(t.completedAt).toDateString())
+    .filter((date, index, self) => self.indexOf(date) === index)
+    .sort()
+    .reverse();
+
+  let streak = 0;
+  let currentDate = new Date();
+  
+  for (let dateStr of completedDates) {
+    const date = new Date(dateStr);
+    if (date.toDateString() === currentDate.toDateString() || 
+        date.toDateString() === new Date(currentDate.getTime() - 24 * 60 * 60 * 1000).toDateString()) {
+      streak++;
+      currentDate = date;
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+};
+
+const getProductivityTrends = (todos) => {
+  const last30Days = todos.filter(todo => 
+    todo.completedAt && todo.completedAt > Date.now() - 30 * 24 * 60 * 60 * 1000
+  );
+  
+  const dailyCompletion = {};
+  last30Days.forEach(todo => {
+    const date = new Date(todo.completedAt).toLocaleDateString();
+    dailyCompletion[date] = (dailyCompletion[date] || 0) + 1;
+  });
+
+  const completionValues = Object.values(dailyCompletion);
+  const totalCompleted = completionValues.reduce((a, b) => a + b, 0);
+  
+  return {
+    averageDaily: totalCompleted / 30,
+    bestDay: Math.max(...completionValues, 0),
+    consistency: (Object.keys(dailyCompletion).length / 30) * 100,
+    totalLast30Days: totalCompleted
+  };
 };
 
 export default function StatsPanel({ todos, isVisible, onClose }) {
@@ -122,7 +159,7 @@ export default function StatsPanel({ todos, isVisible, onClose }) {
       return acc;
     }, {});
 
-    // SOLUCIÓN DEFINITIVA: Tareas próximas a vencer que NO usa Date() para comparaciones
+    // Tareas próximas y vencidas
     const today = new Date();
     const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const nextWeek = new Date(todayLocal);
@@ -139,7 +176,6 @@ export default function StatsPanel({ todos, isVisible, onClose }) {
       }
     }).length;
 
-    // SOLUCIÓN DEFINITIVA: Tareas vencidas que NO usa Date() para comparaciones
     const overdue = todos.filter(todo => {
       if (!todo.dueDate || todo.completed) return false;
       try {
@@ -151,12 +187,15 @@ export default function StatsPanel({ todos, isVisible, onClose }) {
       }
     }).length;
 
-    // Productividad semanal (últimos 7 días)
+    // Productividad
     const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const completedThisWeek = todos.filter(todo => 
       todo.completedAt && 
       new Date(todo.completedAt) > lastWeek
     ).length;
+
+    const streak = calculateStreak(todos);
+    const trends = getProductivityTrends(todos);
 
     return {
       total,
@@ -167,7 +206,10 @@ export default function StatsPanel({ todos, isVisible, onClose }) {
       upcoming,
       overdue,
       completedThisWeek,
-      pending: total - completed
+      pending: total - completed,
+      streak,
+      trends,
+      efficiency: total > 0 ? Math.round((completed / total) * 100) : 0
     };
   }, [todos]);
 
@@ -215,6 +257,26 @@ export default function StatsPanel({ todos, isVisible, onClose }) {
           </div>
         </div>
 
+        {/* Racha y tendencias */}
+        <div className="stats-trends">
+          <div className="trend-card">
+            <div className="trend-value">🔥 {stats.streak}</div>
+            <div className="trend-label">Días de racha</div>
+          </div>
+          <div className="trend-card">
+            <div className="trend-value">📈 {stats.trends.averageDaily.toFixed(1)}</div>
+            <div className="trend-label">Promedio diario</div>
+          </div>
+          <div className="trend-card">
+            <div className="trend-value">⭐ {stats.trends.bestDay}</div>
+            <div className="trend-label">Mejor día</div>
+          </div>
+          <div className="trend-card">
+            <div className="trend-value">🎯 {Math.round(stats.trends.consistency)}%</div>
+            <div className="trend-label">Consistencia</div>
+          </div>
+        </div>
+
         {/* Alertas importantes */}
         <div className="stats-alerts">
           {stats.overdue > 0 && (
@@ -243,6 +305,16 @@ export default function StatsPanel({ todos, isVisible, onClose }) {
               <div>
                 <strong>{stats.completedThisWeek} tarea(s) completada(s) esta semana</strong>
                 <small>¡Buen trabajo!</small>
+              </div>
+            </div>
+          )}
+
+          {stats.streak >= 3 && (
+            <div className="alert alert-info">
+              <span>🔥</span>
+              <div>
+                <strong>Racha de {stats.streak} días consecutivos</strong>
+                <small>¡Sigue así!</small>
               </div>
             </div>
           )}
@@ -315,7 +387,7 @@ export default function StatsPanel({ todos, isVisible, onClose }) {
             </div>
             <div className="productivity-item">
               <div className="productivity-value">
-                {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
+                {stats.efficiency}%
               </div>
               <div className="productivity-label">Eficiencia general</div>
             </div>
@@ -323,15 +395,20 @@ export default function StatsPanel({ todos, isVisible, onClose }) {
               <div className="productivity-value">{stats.upcoming}</div>
               <div className="productivity-label">Próximas esta semana</div>
             </div>
+            <div className="productivity-item">
+              <div className="productivity-value">{stats.trends.totalLast30Days}</div>
+              <div className="productivity-label">Completadas (30 días)</div>
+            </div>
           </div>
         </div>
 
         <div className="stats-footer">
-          <p>💡 <strong>Consejo:</strong> Usa atajos de teclado para ser más productivo</p>
+          <p>💡 <strong>Consejo:</strong> Mantén tu racha completando al menos una tarea cada día</p>
           <div className="shortcuts-list">
             <span><kbd>Ctrl</kbd> + <kbd>N</kbd> Nueva tarea</span>
             <span><kbd>Ctrl</kbd> + <kbd>K</kbd> Buscar</span>
             <span><kbd>Ctrl</kbd> + <kbd>S</kbd> Estadísticas</span>
+            <span><kbd>Ctrl</kbd> + <kbd>D</kbd> Toggle tema</span>
           </div>
         </div>
       </div>
